@@ -90,3 +90,9 @@ crashlytics-build.properties
 android/*
 .DS_Store
 *.pt
+
+# AI Models
+*.pt
+*.pth
+Assets/StreamingAssets/Whisper
+Assets/StreamingAssets/Whisper.meta

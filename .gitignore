@@ -96,3 +96,7 @@ android/*
 *.pth
 Assets/StreamingAssets/Whisper
 Assets/StreamingAssets/Whisper.meta
+
+# OpenAI Config
+Assets/Resources/OpenAIConfiguration.asset
+Assets/Resources/OpenAIConfiguration.asset.meta

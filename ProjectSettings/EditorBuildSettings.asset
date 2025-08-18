@@ -5,9 +5,15 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 0
+    path: Assets/Daniel/SpeechToText/STTSample.unity
+    guid: 91078e01a6677453a94b89cf3e50f13b
+  - enabled: 1
+    path: Assets/Daniel/TextToSpeech/TTSSample.unity
+    guid: 84f847a221d034a0282c2695382f484b
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 14feede3ede5f4b518e7b4a31ccaf0cf, type: 2}

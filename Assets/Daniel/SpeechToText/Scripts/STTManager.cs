@@ -1,146 +1,262 @@
+using System;
+using System.Net.WebSockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Collections.Concurrent;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using Whisper;
-using Whisper.Utils;
-using Button = UnityEngine.UI.Button;
 using Debug = UnityEngine.Debug;
 
+/// <summary>
+/// Connects to a local STT WebSocket server, streams Base64 PCM16 chunks from MicrophoneStreamer,
+/// and displays/dispatches transcription results. Uses System.Net.WebSockets.
+/// </summary>
 public class STTManager : MonoBehaviour
 {
-    [SerializeField] private WhisperManager whisper;
-    [SerializeField] private MicrophoneRecord microphoneRecord;
-    [SerializeField] private bool streamSegments = true;
-    [SerializeField] private bool printLanguage = true;
+    [Header("Config")]
+    [SerializeField] private string serverUrl = "ws://192.168.1.100:8000"; // set your Mac IP
+    [SerializeField] private bool streamSegments = false; // server returns final result on stop by default
 
-    [Header("UI (Testing Only)")] 
+    [Header("Dependencies")]
+    [SerializeField] private MicrophoneStreamer microphoneStreamer;
+
+    [Header("UI (Testing Only)")]
     [SerializeField] private OVRInput.RawButton actionButton = OVRInput.RawButton.A;
     public Button button;
     public TMP_Text buttonText;
     public TMP_Text outputText;
-    public ScrollRect scroll;
-    
+
     [Header("Events")]
     public UnityEvent onWhisperReady;
     public UnityEvent<string> onTranscribed;
-    
-    private string _buffer;
-    private bool _didModelLoadNotify = false;
 
-    private void Awake()
+    private ClientWebSocket ws;
+    private CancellationTokenSource cts;
+    private bool _isRecording = false;
+    private string _buffer = "";
+    private int _chunkCount = 0;
+
+    // Thread-safe messages from ReceiveLoop -> processed on main thread in Update()
+    private readonly ConcurrentQueue<string> _incomingTexts = new ConcurrentQueue<string>();
+    private readonly ConcurrentQueue<string> _incomingErrors = new ConcurrentQueue<string>();
+
+    #region Unity Lifecycle
+
+    private async void Start()
     {
-        whisper.OnNewSegment += OnNewSegment;
-        
-        microphoneRecord.OnRecordStop += OnRecordStop;
-        
-        button.onClick.AddListener(OnButtonPressed);
+        if (button != null) button.onClick.AddListener(OnButtonPressed);
+        await ConnectWebSocket();
     }
 
     private void Update()
     {
-        if (whisper.IsLoading)
-        {
-            button.enabled = false;
-            buttonText.text = "Loadig Model...";
-            return;
-        }
-
-        if (!_didModelLoadNotify && whisper.IsLoaded)
-        {
-            button.enabled = true;
-            buttonText.text = "Record";
-            onWhisperReady?.Invoke();
-            _didModelLoadNotify = true;
-        }
-
+        // Optional controller shortcut
         if (OVRInput.GetUp(actionButton))
-        {
             OnStartRecording();
+
+        // Pump results from background receive loop to main thread/UI
+        while (_incomingTexts.TryDequeue(out var text))
+        {
+            if (streamSegments)
+                AppendStreamedSegment(text);
+            else
+                HandleFinalResult(text);
+        }
+        while (_incomingErrors.TryDequeue(out var err))
+        {
+            Debug.LogError($"STT error: {err}");
         }
     }
 
-    private void OnButtonPressed()
+    private void OnDestroy()
     {
-        OnStartRecording();
+        if (microphoneStreamer != null)
+            microphoneStreamer.OnAudioChunk -= SendAudioChunk;
+
+        _ = CloseWebSocket();
+        if (button != null) button.onClick.RemoveListener(OnButtonPressed);
     }
-    
-    /**
-     * OnStartRecording()
-     * Starts the microhpone listening process to transcribe using whisper
-     * The recording uses the local microphone device (main one)
-     */
+
+    #endregion
+
+    #region WebSocket
+
+    private async Task ConnectWebSocket()
+    {
+        ws = new ClientWebSocket();
+        cts = new CancellationTokenSource();
+
+        try
+        {
+            await ws.ConnectAsync(new Uri(serverUrl), cts.Token);
+            Debug.Log("Connected to STT server");
+            onWhisperReady?.Invoke();
+            _ = ReceiveLoop(); // fire-and-forget
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("WebSocket connect failed: " + e.Message);
+        }
+    }
+
+    private async Task ReceiveLoop()
+    {
+        var buffer = new byte[32 * 1024];
+
+        try
+        {
+            while (ws.State == WebSocketState.Open)
+            {
+                var result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), cts.Token);
+                if (result.MessageType == WebSocketMessageType.Close)
+                {
+                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "bye", cts.Token);
+                    break;
+                }
+
+                var msg = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                // Expect {"text":"..."} or {"error":"..."}
+                var res = JsonUtility.FromJson<STTResult>(msg);
+                if (res != null && !string.IsNullOrEmpty(res.text))
+                {
+                    _incomingTexts.Enqueue(res.text);
+                    continue;
+                }
+
+                var err = JsonUtility.FromJson<STTError>(msg);
+                if (err != null && !string.IsNullOrEmpty(err.error))
+                {
+                    _incomingErrors.Enqueue(err.error);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            _incomingErrors.Enqueue($"ReceiveLoop exception: {e.Message}");
+        }
+    }
+
+    private async Task CloseWebSocket()
+    {
+        try
+        {
+            if (ws != null && (ws.State == WebSocketState.Open || ws.State == WebSocketState.CloseReceived))
+            {
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning("CloseWebSocket warning: " + e.Message);
+        }
+        finally
+        {
+            ws?.Dispose();
+            ws = null;
+            cts?.Cancel();
+            cts?.Dispose();
+            cts = null;
+        }
+    }
+
+    private async Task SendAsync(string json)
+    {
+        if (ws == null || ws.State != WebSocketState.Open) return;
+        var bytes = Encoding.UTF8.GetBytes(json);
+        try
+        {
+            await ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, cts.Token);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("SendAsync error: " + e.Message);
+        }
+    }
+
+    #endregion
+
+    #region Controls & Streaming
+
+    private void OnButtonPressed() => OnStartRecording();
+
+    /// <summary>
+    /// Toggle recording (invoked by UI button or external callers).
+    /// </summary>
     public void OnStartRecording()
     {
-        if (!microphoneRecord.IsRecording)
-        {
-            microphoneRecord.StartRecord();
-            buttonText.text = "Stop";
-        }
-        else
-        {
-            microphoneRecord.StopRecord();
-            buttonText.text = "Record";
-        }
+        if (!_isRecording) StartRecording();
+        else StopRecording();
     }
-    
-    private static AudioClip ToAudioClip(AudioChunk chunk, string clipName = "AudioChunkClip")
+
+    private void StartRecording()
     {
-        if (chunk.Data == null || chunk.Data.Length == 0)
+        if (microphoneStreamer == null)
         {
-            Debug.LogWarning("AudioChunk has no data.");
-            return null;
+            Debug.LogError("STTManager: MicrophoneStreamer is not assigned in the inspector.");
+            return;
         }
 
-        // Create an empty clip with correct settings
-        AudioClip clip = AudioClip.Create(
-            clipName,
-            chunk.Data.Length / chunk.Channels,
-            chunk.Channels,
-            chunk.Frequency,
-            false
-        );
-
-        // Fill clip with data
-        clip.SetData(chunk.Data, 0);
-
-        return clip;
-    }
-    
-    private async void OnRecordStop(AudioChunk recordedAudio)
-    {
-        buttonText.text = "Record";
+        _isRecording = true;
         _buffer = "";
-        
-        var res = await whisper.GetTextAsync(recordedAudio.Data, recordedAudio.Frequency, recordedAudio.Channels);
-        if (res == null || !outputText) 
-            return;
+        _chunkCount = 0;
+        if (buttonText) buttonText.text = "Stop";
 
-        // StartCoroutine(OpenAIManager.STTCoroutine(ToAudioClip(recordedAudio), transcription =>
-        // {
-        //     onTranscribed?.Invoke(transcription);
-        //     outputText.text = transcription;
-        //     Debug.Log("TEXT: " + transcription);
-        //     UiUtils.ScrollDown(scroll);
-        // }));
-        
-        var text = res.Result;
-        if (printLanguage)
-            text += $"\n\nLanguage: {res.Language}";
-        
-        onTranscribed?.Invoke(text);
-        outputText.text = text;
-        Debug.Log("TEXT: " + text);
-        UiUtils.ScrollDown(scroll);
+        microphoneStreamer.OnAudioChunk += SendAudioChunk;
+        microphoneStreamer.StartStreaming();
+
+        Debug.Log("Recording started... awaiting chunks");
     }
-    
-    private void OnNewSegment(WhisperSegment segment)
+
+    private void StopRecording()
     {
-        if (!streamSegments || !outputText)
-            return;
+        _isRecording = false;
+        if (buttonText) buttonText.text = "Record";
 
-        _buffer += segment.Text;
-        outputText.text = _buffer + "...";
-        UiUtils.ScrollDown(scroll);
+        if (microphoneStreamer != null)
+        {
+            microphoneStreamer.OnAudioChunk -= SendAudioChunk;
+            microphoneStreamer.StopStreaming();
+        }
+
+        var stopMsg = JsonUtility.ToJson(new StopEvent { eventType = "stop" });
+        _ = SendAsync(stopMsg);
+
+        Debug.Log($"Recording stopped. Chunks sent: {_chunkCount}");
     }
+
+    private void SendAudioChunk(string base64Chunk)
+    {
+        _chunkCount++;
+        if (_chunkCount <= 5)
+            Debug.Log($"Sending chunk #{_chunkCount} (base64 len {base64Chunk.Length})");
+
+        var audioMsg = JsonUtility.ToJson(new AudioEvent { audio = base64Chunk });
+        _ = SendAsync(audioMsg);
+    }
+
+    #endregion
+
+    #region Results & DTOs
+
+    private void AppendStreamedSegment(string segment)
+    {
+        _buffer += segment;
+        if (outputText != null) outputText.text = _buffer + "...";
+    }
+
+    private void HandleFinalResult(string text)
+    {
+        onTranscribed?.Invoke(text);
+        if (outputText != null) outputText.text = text;
+    }
+
+    [Serializable] private class STTResult { public string text; }
+    [Serializable] private class STTError  { public string error; }
+    [Serializable] private class StopEvent { public string eventType; }  // "stop"
+    [Serializable] private class AudioEvent { public string audio; }     // Base64 PCM16
+
+    #endregion
 }

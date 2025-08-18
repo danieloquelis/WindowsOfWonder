@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
@@ -36,9 +37,9 @@ public class LLMManager : MonoBehaviour
     /// Start the game
     /// </summary>
 
-    public void CallLLM(string selectedObject, int chapter = 1)
+    public void CallLLM(string selectedObject, List<string> detectedObjects, int chapter = 1)
     {
-        userInput = requestSender.GetPrompt(chapter, selectedObject);
+        userInput = requestSender.GetPrompt(chapter, selectedObject, detectedObjects);
         onInferenceRunning.Invoke();
         StartCoroutine(RunLLMFlow(userInput, myObject));
     }

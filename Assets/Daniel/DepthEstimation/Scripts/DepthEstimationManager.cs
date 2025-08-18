@@ -49,7 +49,7 @@ public class DepthEstimationManager : MonoBehaviour
     [Header("Events")]
     public UnityEvent OnLoadingStarted;
     public UnityEvent OnLoadingCompleted;
-    public UnityEvent<Texture2D> OnDepthMapReceived;
+    public UnityEvent<Texture2D, Texture2D> OnDepthMapReceived;
     public UnityEvent<string> OnError;
     
     private string apiUrl => $"https://api.runpod.ai/v2/{endpointId}/runsync";
@@ -84,11 +84,6 @@ public class DepthEstimationManager : MonoBehaviour
         StartCoroutine(ProcessImageCoroutine(inputImage));
     }
     
-    public void ProcessImageFromBase64(string base64Image)
-    {
-        StartCoroutine(ProcessBase64Coroutine(base64Image));
-    }
-    
     private IEnumerator ProcessImageCoroutine(Texture2D inputImage)
     {
         OnLoadingStarted?.Invoke();
@@ -100,10 +95,10 @@ public class DepthEstimationManager : MonoBehaviour
         var base64Image = TextureToBase64(inputImage);
         UnityEngine.Debug.Log($"[Timer] TextureToBase64 took {sw.ElapsedMilliseconds} ms");
 
-        yield return ProcessBase64Coroutine(base64Image, sw);
+        yield return ProcessBase64Coroutine(inputImage, base64Image, sw);
     }
     
-    private IEnumerator ProcessBase64Coroutine(string base64Image, Stopwatch sw = null)
+    private IEnumerator ProcessBase64Coroutine(Texture2D originalImage, string base64Image, Stopwatch sw = null)
     {
         if (string.IsNullOrEmpty(base64Image))
         {
@@ -170,7 +165,7 @@ public class DepthEstimationManager : MonoBehaviour
                             if (resultDisplay != null)
                                 resultDisplay.texture = depthTexture;
                             
-                            OnDepthMapReceived?.Invoke(depthTexture);
+                            OnDepthMapReceived?.Invoke(originalImage, depthTexture);
                         }
                         else
                         {

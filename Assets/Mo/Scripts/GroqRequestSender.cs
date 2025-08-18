@@ -3,6 +3,8 @@ using System.Collections;
 using System.Text;
 using UnityEngine.Networking;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 public class GroqRequestSender : MonoBehaviour
 {
@@ -13,8 +15,8 @@ public class GroqRequestSender : MonoBehaviour
 
     [SerializeField, TextArea(3, 10)] private string userInput =
         "[INST]Write Chapter 1 of a 3-chapter creative story. " +
-        "\nRules:\n- The story must be exactly 5 sentences long. " +
-        "\n- Each chapter introduces a new object. Chapter 1 is about a bottle." +
+        "\nRules:\n- The story must be exactly 1 sentences long. " +
+        "\n- Each chapter introduces a new object." +
         "\n- Output must be valid JSON with only these keys: " +
         "\n  {\n    \"chapter\": 1,\n    \"title\": \"string\",\n    \"story\": \"5 full sentences of narrative prose\",\n    \"image_prompt\": \"string describing the scene for image generation\",\n    \"ambient_audio\": \"one choice from: Storm, Airport, supermarket, forest, river, Submarine, space\"\n  }\n[/INST]";
 
@@ -83,19 +85,19 @@ Respond ONLY with this JSON structure (no markdown formatting):
         public string content;
     }
 
-    public string GetPrompt(int chapter, string myObject)
+    public string GetPrompt(int chapter, string myObject, List<string> detectedObjects)
     {
         string str1, str2, newprompt = null;
         
         str1 =      "[INST]Write Chapter " + chapter + " of a 3-chapter creative story. " +
-                    "\nRules:\n- The story must be exactly 5 sentences long. " +
+                    "\nRules:\n- The story must be exactly 1 sentences long. " +
                     "\n- Each chapter introduces a new object. Chapter " + chapter + " is about a " + myObject + 
                     "\n- Output must be valid JSON with only these keys: " +
                     "\n  {\n    \"chapter\": 1,\n    \"title\": \"string\",\n    \"story\": \"5 full sentences of narrative prose\",\n    \"image_prompt\": \"string describing the scene for image generation\",\n    \"ambient_audio\": \"one choice from: Storm, Airport, supermarket, forest, river, Submarine, space\"\n  }\n[/INST]";
         
-        str2 = @"Analyze the following story addition and identify appropriate audio and lighting effects to enhance the scene. Return your analysis in the specified JSON format.
+        str2 = $@"Analyze the following story addition and identify appropriate audio and lighting effects to enhance the scene. Return your analysis in the specified JSON format.
 
-        Story addition: ""{USER_INPUT}""
+        Story addition: ""{{USER_INPUT}}""
 
         Based on the story content, determine:
 
@@ -103,26 +105,30 @@ Respond ONLY with this JSON structure (no markdown formatting):
         2. Creature/Character Sounds (use simple audio file names like: growl, roar, footsteps, bird_chirp, wolf_howl,sheep,barking, owl, cat)
         3. Emotional/Musical Tone (use simple audio file names like: tense_music, calm_music, dramatic_music, ambient_music, desert_music, happy_music, sad_music, scary_music, exciting_music)
         4. Lighting Atmosphere (use simple color names like: red, blue, orange, white, yellow, pink  or hex codes like #FF0000)
+        5. As this is a game, pick an object from this list {string.Join(", ", detectedObjects)} that is not same as {myObject}. Return a variable called next_question something like **Now it is your turn, tell me a story about hmmm... <HERE YOUR PICKED OBJECT FROM THE LIST> and try to beat me...**
+        6. From step #5 (previous one) also return the name of the object you selected (without changing it) within the variable named **selected_object_by_ai**. 
 
         Respond ONLY with this JSON structure (no markdown formatting):
-        {{
+        {{{{
           ""chapters"": ""chapter"",
           ""titles"": ""title"",
           ""story"": ""story"",
           ""image_prompt"": ""image_prompt"",
-          ""audio_effects"": {{
+          ""audio_effects"": {{{{
             ""environmental"": [""effect1"", ""effect2""],
             ""creatures"": [""sound1"", ""sound2""], 
             ""music_tone"": ""tone_description""
-          }},
-          ""lighting_effects"": {{
+          }}}},
+          ""lighting_effects"": {{{{
             ""intensity"": ""increase"",
             ""atmosphere"": ""atmosphere_description"",
             ""color_mood"": ""#FF6600""
-          }},
+          }}}},
           ""confidence"": ""high"",
+          ""next_question"": ""next_question"",
+          ""selected_object_by_ai"": ""selected_object_by_ai"",
           ""reasoning"": ""brief explanation of detected elements""
-        }}";
+        }}}}";
         
         newprompt = str1 + str2;
         return (newprompt);

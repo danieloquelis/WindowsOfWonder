@@ -14,7 +14,7 @@ public class TagManager : MonoBehaviour
 
     public void OnClicked()
     {
-        StartCoroutine(_gameManager.OnObjectSelected(this));
+        _gameManager.OnObjectSelected(this);
     }
 
     public void SetObjectName(string objName)

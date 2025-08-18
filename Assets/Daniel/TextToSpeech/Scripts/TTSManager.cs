@@ -57,39 +57,53 @@ public class TTSManager : MonoBehaviour
 
     public void Speak(string text, Action onComplete = null)
     {
-        if (_audioSource.isPlaying) return;
-    
-        Debug.Log("Starting speech...");
+        StartCoroutine(SpeakRoutine(text, onComplete));
+    }
+
+    private IEnumerator SpeakRoutine(string text, Action onComplete)
+    {
+        var content = string.IsNullOrWhiteSpace(text) ? testText : text;
+
+        // If something is playing, WAIT instead of silently returning.
+        if (_audioSource.isPlaying)
+            yield return new WaitWhile(() => _audioSource.isPlaying);
+
+        Debug.Log($"[TTS] Starting speech. isPlaying={_audioSource.isPlaying}, text='{content}'");
+
         onStartProcessing?.Invoke();
 
+        // Kick off TTS fetch
         StartCoroutine(OpenAIManager.TTSCoroutine(
-            text ?? testText, 
-            model.GetDescription(), 
-            voice.ToString(), 
-            instructions, 
+            content,
+            model.GetDescription(),
+            voice.ToString(),
+            instructions,
             audioClip =>
             {
-                Debug.Log("Inference done, playing...");
                 onProcessingFinished?.Invoke();
 
                 if (audioClip)
                 {
+                    Debug.Log($"[TTS] Inference done. clipLength={audioClip.length:F2}s");
                     _audioSource.PlayOneShot(audioClip);
-                    StartCoroutine(WaitForClipToEnd(audioClip.length, onComplete));
+                    // Wait for ACTUAL playback to finish (more reliable than WaitForSeconds)
+                    StartCoroutine(WaitForAudioToFinish(onComplete));
                 }
                 else
                 {
+                    Debug.LogWarning("[TTS] No AudioClip returned (empty text? API error?).");
                     onComplete?.Invoke();
                 }
             }));
     }
 
-    private IEnumerator WaitForClipToEnd(float clipLength, Action onComplete)
+    private IEnumerator WaitForAudioToFinish(Action onComplete)
     {
-        yield return new WaitForSeconds(clipLength);
+        yield return new WaitWhile(() => _audioSource.isPlaying);
+        Debug.Log("[TTS] Playback finished.");
         onComplete?.Invoke();
     }
-
+    
     
     /**
      * DO NOT Use this

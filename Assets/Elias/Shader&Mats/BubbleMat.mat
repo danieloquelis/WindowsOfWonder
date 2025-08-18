@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: DepthMat
-  m_Shader: {fileID: 4800000, guid: 9d405e6a79244c74fa2f1f341d529bef, type: 3}
+  m_Name: BubbleMat
+  m_Shader: {fileID: 4800000, guid: 4a176b0d30937d9438fab025a0eb6b78, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -23,35 +23,29 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: 739925a6fab6af949a70c57874aab2c7, type: 3}
-        m_Scale: {x: 0.7, y: 0.7}
-        m_Offset: {x: 0.15, y: 0.15}
-    - _DepthMap:
-        m_Texture: {fileID: 2800000, guid: f847a7b66b312814ea85192e081b831b, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _DepthTex:
-        m_Texture: {fileID: 2800000, guid: f847a7b66b312814ea85192e081b831b, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SceneTex:
         m_Texture: {fileID: 2800000, guid: 739925a6fab6af949a70c57874aab2c7, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _DepthMultiplier: 0.4
+    - _FresnelPower: 0.82
+    - _FresnelStrength: 1.06
     - _Glossiness: 0.5
-    - _HeightScale: 0.2
-    - _InvertDepth: 0
-    - _MaxSteps: 91.4
-    - _MaxTexOffset: 0.05
+    - _LightAlphaInfluence: -0.37
     - _Metallic: 0
-    - _MinSteps: 8
-    - _Parallax: 0.05
-    - _RefineSteps: 8
+    - _RainbowIntensity: 1.1
+    - _ReflectStrength: 0.2
+    - _RefractStrength: 0.07
+    - _Shininess: 35
+    - _Thickness: 0.6
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _SpecColor: {r: 1, g: 1, b: 1, a: 1}
+    - _TintColor: {r: 0.8132075, g: 0.8737242, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

@@ -1,0 +1,32 @@
+Research & Licensing
+Microsoft Research
+Microsoft Research is a leading technology research organization focused on advancing the state-of-the-art in computer science and software engineering. Their computer vision research group has produced breakthrough models in object detection, image understanding, and multimodal AI systems.
+
+Florence-2: Advancing a Unified Representation for a Variety of Vision Tasks
+Florence-2 is a vision foundation model that advances unified representation learning for computer vision. It can handle a wide variety of vision tasks through a single model using prompt-based task specification, making it highly versatile for applications ranging from image captioning to object detection and OCR.
+
+Technical Details
+Vision Transformer Architecture: Unified encoder-decoder framework
+Multi-task Training: Single model handles captioning, detection, OCR, and segmentation
+Prompt-based Interface: Task specification through natural language prompts
+Research Impact
+Unified Vision AI: Single model replacing multiple specialized vision systems
+Comprehensive Evaluation: Extensive benchmarking across diverse vision tasks
+Open Research: Democratizing access to advanced vision foundation models
+Citation
+@article{xiao2023florence,
+  title={Florence-2: Advancing a Unified Representation for a Variety of Vision Tasks},
+  author={Xiao, Bin and Wu, Haiping and Xu, Weijian and Dai, Xiyang and Hu, Houdong and Lu, Yumao and Zeng, Michael and Liu, Ce and Yuan, Lu},
+  journal={arXiv preprint arXiv:2311.06242},
+  year={2023},
+  url={https://arxiv.org/abs/2311.06242}
+}
+Key Research Contributions
+Unified vision foundation model for multiple tasks with prompt-based interface
+FLD-5B dataset with 5.4 billion comprehensive visual annotations
+State-of-the-art performance across diverse vision tasks including captioning, detection, and segmentation
+License
+MIT License - This model is freely available for research and commercial use.
+
+Loading Icon:
+https://www.flaticon.com/free-icon/loading_39979?term=loading&page=1&position=4&origin=search&related_id=39979

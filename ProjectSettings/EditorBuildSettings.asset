@@ -9,13 +9,11 @@ EditorBuildSettings:
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 1
-    path: Assets/Daniel/SpeechToText/STTSample.unity
-    guid: 91078e01a6677453a94b89cf3e50f13b
-  - enabled: 0
-    path: Assets/Daniel/TextToSpeech/TTSSample.unity
-    guid: 84f847a221d034a0282c2695382f484b
+    path: Assets/Elias/Scenes/PCAObjDetection.unity
+    guid: 58aa3e85c9e36424090d4834009adcac
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+    com.unity.xr.arfoundation.simulation_settings: {fileID: 11400000, guid: 810d0665ad7ba254f8b2e1677b8f3479, type: 2}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 14feede3ede5f4b518e7b4a31ccaf0cf, type: 2}
     com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 400d18ba319f54c799921fff52d3ff17, type: 2}
   m_UseUCBPForAssetBundles: 0

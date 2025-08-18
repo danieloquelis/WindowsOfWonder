@@ -90,3 +90,17 @@ crashlytics-build.properties
 android/*
 .DS_Store
 *.pt
+
+# Runpod Config
+Assets/Resources/RunPodConfig.asset
+Assets/Resources/RunPodConfig.asset.meta
+
+# AI Models
+*.pt
+*.pth
+Assets/StreamingAssets/Whisper
+Assets/StreamingAssets/Whisper.meta
+
+# OpenAI Config
+Assets/Resources/OpenAIConfiguration.asset
+Assets/Resources/OpenAIConfiguration.asset.meta

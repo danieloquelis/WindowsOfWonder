@@ -85,6 +85,22 @@ Respond ONLY with this JSON structure (no markdown formatting):
         public string content;
     }
 
+    public string GetPromptForUserEvaluation(string userStory)
+    {
+        return
+            $@"Analyse this story given by the user of this game: {userStory} => And return a json structure with the following information
+            1. Small comment about the story highlighting the creativity and some elements on the story. Make sure to be concise having 10 seconds max. If the story is small or not creative, answer with a funny joke about it without being harsh.
+            2. The next question will be: Now it is your turn to pick an object and .... => here you can decide how the question will be, if the story from user was good then AI should be afraid but if it was not good then AI can be a bit sarcastic like `Let me show you how it is suppose to be`
+            3. A prompt to generate an image based on the user story: {userStory}. Make sure it is optimised for flux image generation. only 5 words prompt.
+Respond ONLY with this JSON structure (no markdown formatting):
+{{{{
+  ""comment"": ""chapter"",
+  ""image_prompt"": ""image_prompt""
+  ""next_question"": ""next_question""
+}}}}
+";
+    }
+
     public string GetPrompt(int chapter, string myObject, List<string> detectedObjects)
     {
         string str1, str2, newprompt = null;
@@ -134,13 +150,16 @@ Respond ONLY with this JSON structure (no markdown formatting):
         return (newprompt);
     }
     
-    public void SendUserInput(string input, Action<string> callback, string myObject)
+    public void SendUserInput(string input, Action<string> callback)
     {
-        if (input == null)
-            input = "\"Write the first of 3 chapters of a creative story which is 5 sentences long and were each chapter introduces a new object. the first chpter is about \" + myObject + \" Also creat a prompt which can be use for image generation, choose one ambient audio for that part of the story from this list of Storm, Airport, supermarket, forest, river, Submarine, space\";";
         userInput = input;
         Debug.Log("USER INPUT -> " + input);
         string prompt = systemPromptTemplate.Replace("{USER_INPUT}", userInput);
+        StartCoroutine(SendRequestCoroutine(prompt, callback));
+    }
+
+    public void GenericLLMRequest(string prompt, Action<string> callback)
+    {
         StartCoroutine(SendRequestCoroutine(prompt, callback));
     }
 

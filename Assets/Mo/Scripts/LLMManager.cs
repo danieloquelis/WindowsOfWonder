@@ -25,10 +25,6 @@ public class LLMManager : MonoBehaviour
         else
             Debug.LogWarning("ImageObject is null");
         
-        /***
-        if (userInput == null)
-            userInput = "Write me the first of 3 chapters of a creative story which is five sentences long were each chapter introduces a new object. the first chapter is about  a bottle. Also create a prompt which can be use for image generation, choose one ambient audio for that part of the story from this list of Storm, Airport, supermarket, forest, river, Submarine, space";
-        ***/
         
         requestSender = GetComponent<GroqRequestSender>();
     }
@@ -40,21 +36,15 @@ public class LLMManager : MonoBehaviour
     public void CallLLM(string selectedObject, List<string> detectedObjects, int chapter = 1)
     {
         userInput = requestSender.GetPrompt(chapter, selectedObject, detectedObjects);
-        onInferenceRunning.Invoke();
-        StartCoroutine(RunLLMFlow(userInput, myObject));
+        onInferenceRunning?.Invoke();
+        StartCoroutine(RunLLMFlow(userInput));
     }
-    
-    public void StartGame()
+
+    public void CallLLMForEvaluatingUser(string userStory)
     {
-        if (imageObject != null) 
-            LoadSpriteIntoImage("Images/orange_moon", imageObject);
-        else
-            Debug.LogWarning("ImageObject is null");
-        
-        if (!string.IsNullOrEmpty(userInput))
-        {
-            StartCoroutine(RunLLMFlow(userInput, myObject));
-        }    
+        var prompt = requestSender.GetPromptForUserEvaluation(userStory);
+        onInferenceRunning?.Invoke();
+        StartCoroutine(RunLLMFlow(prompt));
     }
         
     /// <summary>
@@ -79,7 +69,7 @@ public class LLMManager : MonoBehaviour
         }
     }
     
-    private IEnumerator RunLLMFlow(string prompt, string myObject)
+    private IEnumerator RunLLMFlow(string prompt)
     {
         bool requestComplete = false;
         string responseJson = null;
@@ -92,11 +82,11 @@ public class LLMManager : MonoBehaviour
             requestComplete = true;
         });
         ***/
-        requestSender.SendUserInput(prompt, (response) =>
+        requestSender.GenericLLMRequest(prompt, (response) =>
         {
             responseJson = response;
             requestComplete = true;
-        }, myObject);
+        });
 
 
         // Wait for the request to complete

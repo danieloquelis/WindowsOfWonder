@@ -11,6 +11,7 @@ public class GroqResponseParser
     public string confidence;
     public string reasoning;
     public string next_question;
+    public string comment;
     public string selected_object_by_ai;
 
     public GroqResponseParser(string json)
@@ -26,6 +27,7 @@ public class GroqResponseParser
             image_prompt = temp.image_prompt;
             next_question = temp.next_question;
             selected_object_by_ai = temp.selected_object_by_ai;
+            comment = temp.comment;
             
             Debug.Log($"Parsed JSON successfully. Confidence: {confidence}");
         }
@@ -84,4 +86,5 @@ public class GroqResponseParser
     
     public string GetNextQuestion() => next_question ?? "";
     public string GetSelectedObjectByAi() => selected_object_by_ai ?? "";
+    public string GetComment() => comment ?? "";
 }

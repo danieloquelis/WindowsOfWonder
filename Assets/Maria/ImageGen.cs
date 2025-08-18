@@ -1,61 +1,70 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Networking;
+using UnityEngine.UI;
 
 public class ImageGen : MonoBehaviour
 {
     [Header("API Settings")]
-    public string apiKey = "YOUR_API_KEY"; // Enter your Flux 1.1 [Pro] API key here
-
-    [Header("Scene Object")]
-    public Renderer targetRenderer; // Assign your plane or curved mesh renderer here
-
-    [Header("Prompt Settings")]
-    [TextArea]
-    public string prompt = "A futuristic city skyline at sunset with flying cars";
-
+    [SerializeField] private string apiKey = "YOUR_API_KEY";
+    
     [Header("Image Settings")]
-    public int width = 1024;  // Make sure this is allowed by the API
-    public int height = 1024; // Make sure this is allowed by the API
-    public float pollInterval = 0.5f; // seconds between polling
+    [SerializeField] private int width = 640; 
+    [SerializeField] private int height = 480;
+    [SerializeField] private float pollInterval = 0.3f;
+    
+    [Header("Test only (Optional)")]
+    [SerializeField] private RawImage targetRawImage;
+    [TextArea][SerializeField] private string testPrompt = "A futuristic city skyline at sunset with flying cars";
 
-    [ContextMenu("Generate Image")]
-    public void GenerateImageButton()
+    [Header("Events")] 
+    public UnityEvent onGenerating;
+    public UnityEvent<Texture2D> onGenerationCompleted;
+    public UnityEvent<string> onGenerationFailed;
+    
+    public void GenerateImage(string prompt)
     {
-        StartCoroutine(GenerateImageAsync());
+        StartCoroutine(GenerateImageAsync(prompt));
+    }
+    
+    public void GenerateTestImage()
+    {
+        StartCoroutine(GenerateImageAsync(testPrompt));
     }
 
-    private IEnumerator GenerateImageAsync()
+    private IEnumerator GenerateImageAsync(string prompt)
     {
-        // Step 1: Send generation request
-        FluxRequest requestData = new FluxRequest(prompt, width, height);
-        string jsonPayload = JsonUtility.ToJson(requestData);
+        var requestData = new FluxRequest(prompt, width, height);
+        var jsonPayload = JsonUtility.ToJson(requestData);
 
-        UnityWebRequest postRequest = new UnityWebRequest("https://api.bfl.ai/v1/flux-pro-1.1", "POST");
-        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonPayload);
+        var postRequest = new UnityWebRequest("https://api.bfl.ai/v1/flux-pro-1.1", "POST");
+        var bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonPayload);
         postRequest.uploadHandler = new UploadHandlerRaw(bodyRaw);
         postRequest.downloadHandler = new DownloadHandlerBuffer();
         postRequest.SetRequestHeader("Content-Type", "application/json");
         postRequest.SetRequestHeader("x-key", apiKey);
-
+        
+        onGenerating?.Invoke();
+        
         yield return postRequest.SendWebRequest();
 
         if (postRequest.result != UnityWebRequest.Result.Success)
         {
             Debug.LogError($"Request error: {postRequest.error}");
+            onGenerationFailed?.Invoke(postRequest.error);
             yield break;
         }
 
         var response = JsonUtility.FromJson<FluxRequestResponse>(postRequest.downloadHandler.text);
-        string pollingUrl = response.polling_url;
+        var pollingUrl = response.polling_url;
 
-        // Step 2: Poll until image is ready
-        bool ready = false;
+        var ready = false;
         while (!ready)
         {
             yield return new WaitForSeconds(pollInterval);
 
-            UnityWebRequest pollRequest = UnityWebRequest.Get(pollingUrl);
+            var pollRequest = UnityWebRequest.Get(pollingUrl);
             pollRequest.SetRequestHeader("accept", "application/json");
             pollRequest.SetRequestHeader("x-key", apiKey);
             yield return pollRequest.SendWebRequest();
@@ -63,6 +72,7 @@ public class ImageGen : MonoBehaviour
             if (pollRequest.result != UnityWebRequest.Result.Success)
             {
                 Debug.LogError($"Polling error: {pollRequest.error}");
+                onGenerationFailed?.Invoke(pollRequest.error);
                 yield break;
             }
 
@@ -70,24 +80,31 @@ public class ImageGen : MonoBehaviour
 
             if (pollResult.status == "Ready")
             {
-                // Treat sample as a URL, not Base64
-                string imageUrl = pollResult.result.sample;
-                UnityWebRequest textureRequest = UnityWebRequestTexture.GetTexture(imageUrl);
+                var imageUrl = pollResult.result.sample;
+                var textureRequest = UnityWebRequestTexture.GetTexture(imageUrl);
                 yield return textureRequest.SendWebRequest();
 
                 if (textureRequest.result != UnityWebRequest.Result.Success)
                 {
                     Debug.LogError($"Texture download failed: {textureRequest.error}");
+                    onGenerationFailed?.Invoke(textureRequest.error);
                     yield break;
                 }
-
-                Texture2D tex = DownloadHandlerTexture.GetContent(textureRequest);
-                targetRenderer.material.mainTexture = tex;
+                
+                var tex = DownloadHandlerTexture.GetContent(textureRequest);
+                if (targetRawImage)
+                {
+                    targetRawImage.texture = tex;
+                    targetRawImage.enabled = true;
+                }
+                
+                onGenerationCompleted?.Invoke(tex);
                 ready = true;
             }
             else if (pollResult.status == "Error" || pollResult.status == "Failed")
             {
                 Debug.LogError($"Generation failed: {pollRequest.downloadHandler.text}");
+                onGenerationFailed?.Invoke(pollRequest.error);
                 yield break;
             }
             else

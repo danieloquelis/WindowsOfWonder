@@ -90,3 +90,7 @@ crashlytics-build.properties
 android/*
 .DS_Store
 *.pt
+
+# Config
+Assets/Resources/RunPodConfig.asset
+Assets/Resources/RunPodConfig.asset.meta

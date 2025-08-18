@@ -1,8 +1,9 @@
 using UnityEngine;
 using System.Collections;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
-public class GameLoop : MonoBehaviour
+public class LLMManager : MonoBehaviour
 {
     [SerializeField] private GroqRequestSender requestSender; // Assign in Inspector
     [SerializeField] private MultiAudioPlayer audioPlayer;    // Assign in Inspector
@@ -11,6 +12,9 @@ public class GameLoop : MonoBehaviour
     
     [TextArea]
     public string userInput;
+
+    public UnityEvent onInferenceRunning;
+    public UnityEvent<GroqResponseParser> onInferenceCompleted;
     
     private void Start()
     {
@@ -26,23 +30,17 @@ public class GameLoop : MonoBehaviour
         ***/
         
         requestSender = GetComponent<GroqRequestSender>();
-        userInput = requestSender.GetPrompt(1, "Bottle");
-              
-        Debug.Log(" USER INPUT IS : "+userInput);
-        if (!string.IsNullOrEmpty(userInput))
-        {
-            StartCoroutine(RunLLMFlow(userInput, myObject));
-        }
     }
     
     /// <summary>
     /// Start the game
     /// </summary>
 
-    public void CallLLM(string input)
+    public void CallLLM(string selectedObject, int chapter = 1)
     {
-        
-        
+        userInput = requestSender.GetPrompt(chapter, selectedObject);
+        onInferenceRunning.Invoke();
+        StartCoroutine(RunLLMFlow(userInput, myObject));
     }
     
     public void StartGame()
@@ -84,7 +82,6 @@ public class GameLoop : MonoBehaviour
     {
         bool requestComplete = false;
         string responseJson = null;
-        myObject = "bottle";
 
         // Step 1: Send request and get JSON response
         /***
@@ -114,14 +111,14 @@ public class GameLoop : MonoBehaviour
 
         // Step 2: Parse the response
         GroqResponseParser parser = new GroqResponseParser(responseJson);
-
-        // Step 3: Handle lighting
-        string[] lightingColors = parser.GetLightingColors();
-        string lightingBrightness = parser.GetLightingBrightness();
-
-        ApplyLighting(lightingColors, lightingBrightness);
-
-        // Step 4: Handle audio
+        onInferenceCompleted?.Invoke(parser);
+        // // Step 3: Handle lighting
+        // string[] lightingColors = parser.GetLightingColors();
+        // string lightingBrightness = parser.GetLightingBrightness();
+        //
+        // //ApplyLighting(lightingColors, lightingBrightness);
+        //
+        // // Step 4: Handle audio
         audioPlayer.PlayAll(parser);
     }
 

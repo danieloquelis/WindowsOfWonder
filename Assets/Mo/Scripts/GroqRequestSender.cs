@@ -109,7 +109,7 @@ Respond ONLY with this JSON structure (no markdown formatting):
           ""chapters"": ""chapter"",
           ""titles"": ""title"",
           ""story"": ""story"",
-          ""image_promtp"": ""image_prompt"",
+          ""image_prompt"": ""image_prompt"",
           ""audio_effects"": {{
             ""environmental"": [""effect1"", ""effect2""],
             ""creatures"": [""sound1"", ""sound2""], 

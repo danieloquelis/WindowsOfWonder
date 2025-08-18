@@ -4,6 +4,8 @@ using System;
 [System.Serializable]
 public class GroqResponseParser
 {
+    public string story;
+    public string image_prompt;
     public AudioEffects audio_effects;
     public LightingEffects lighting_effects;
     public string confidence;
@@ -18,6 +20,8 @@ public class GroqResponseParser
             lighting_effects = temp.lighting_effects;
             confidence = temp.confidence;
             reasoning = temp.reasoning;
+            story = temp.story;
+            image_prompt = temp.image_prompt;
             
             Debug.Log($"Parsed JSON successfully. Confidence: {confidence}");
         }
@@ -70,4 +74,7 @@ public class GroqResponseParser
     public string GetLightingAtmosphere() => lighting_effects?.atmosphere ?? "";
     public string GetConfidence() => confidence ?? "unknown";
     public string GetReasoning() => reasoning ?? "";
+    
+    public string GetStory() => story ?? "";
+    public string GetImagePrompt() => image_prompt ?? "";
 }

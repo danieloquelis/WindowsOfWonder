@@ -10,7 +10,7 @@ namespace PresentFutures.XRAI.Florence
         // Update is called once per frame
         void Update()
         {
-            if (OVRInput.GetDown(OVRInput.Button.Two) ||  OVRInput.GetDown(OVRInput.Button.One))
+            if (OVRInput.GetDown(OVRInput.RawButton.A))
             {
                 OnControllerButtonPressed?.Invoke();
             }

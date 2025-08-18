@@ -537,6 +537,10 @@ namespace PresentFutures.XRAI.Florence
                     if (environmentRaycastManager.Raycast(ray, out EnvironmentRaycastHit hitInfo))
                     {
                         GameObject anchorGo = Instantiate(spatialAnchorPrefab);
+                        if (anchorGo.TryGetComponent<TagManager>(out var tagManager))
+                        {
+                            tagManager.SetObjectName(det.Label);
+                        }
                         anchorGo.transform.SetPositionAndRotation(
                             hitInfo.point,
                             Quaternion.LookRotation(hitInfo.normal, Vector3.up));

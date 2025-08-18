@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using UnityEngine;
 using System.ComponentModel;
 using UnityEditor;
@@ -53,24 +55,41 @@ public class TTSManager : MonoBehaviour
         }
     }
 
-    public void Speak(string text)
+    public void Speak(string text, Action onComplete = null)
     {
         if (_audioSource.isPlaying) return;
-        
+    
         Debug.Log("Starting speech...");
         onStartProcessing?.Invoke();
-        
-        StartCoroutine(OpenAIManager.TTSCoroutine(text ?? testText, model.GetDescription(), voice.ToString(), instructions, audioClip =>
-        {
-            Debug.Log("Inference done, playing...");
-            onProcessingFinished?.Invoke();
-            
-            if (audioClip)
+
+        StartCoroutine(OpenAIManager.TTSCoroutine(
+            text ?? testText, 
+            model.GetDescription(), 
+            voice.ToString(), 
+            instructions, 
+            audioClip =>
             {
-                _audioSource.PlayOneShot(audioClip);
-            }
-        }));
+                Debug.Log("Inference done, playing...");
+                onProcessingFinished?.Invoke();
+
+                if (audioClip)
+                {
+                    _audioSource.PlayOneShot(audioClip);
+                    StartCoroutine(WaitForClipToEnd(audioClip.length, onComplete));
+                }
+                else
+                {
+                    onComplete?.Invoke();
+                }
+            }));
     }
+
+    private IEnumerator WaitForClipToEnd(float clipLength, Action onComplete)
+    {
+        yield return new WaitForSeconds(clipLength);
+        onComplete?.Invoke();
+    }
+
     
     /**
      * DO NOT Use this

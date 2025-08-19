@@ -24,7 +24,7 @@ public class STTManager : MonoBehaviour
     [SerializeField] private MicrophoneStreamer microphoneStreamer;
 
     [Header("UI (Testing Only)")]
-    [SerializeField] private OVRInput.RawButton actionButton = OVRInput.RawButton.A;
+    [SerializeField] private OVRInput.RawButton actionButton = OVRInput.RawButton.X;
     public Button button;
     public TMP_Text buttonText;
     public TMP_Text outputText;
@@ -53,17 +53,21 @@ public class STTManager : MonoBehaviour
 
     private void Update()
     {
-        // Optional controller shortcut
-        if (OVRInput.GetUp(actionButton))
-            OnStartRecording();
-
         // Pump results from background receive loop to main thread/UI
         while (_incomingTexts.TryDequeue(out var text))
         {
+            Debug.Log($"[STT] Processing transcription from queue: '{text}'");
+            Debug.Log($"[STT] streamSegments = {streamSegments}");
             if (streamSegments)
+            {
+                Debug.Log($"[STT] Calling AppendStreamedSegment");
                 AppendStreamedSegment(text);
+            }
             else
+            {
+                Debug.Log($"[STT] Calling HandleFinalResult");
                 HandleFinalResult(text);
+            }
         }
         while (_incomingErrors.TryDequeue(out var err))
         {
@@ -118,10 +122,13 @@ public class STTManager : MonoBehaviour
                 }
 
                 var msg = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                Debug.Log($"[STT] Received message: {msg}");
+                
                 // Expect {"text":"..."} or {"error":"..."}
                 var res = JsonUtility.FromJson<STTResult>(msg);
                 if (res != null && !string.IsNullOrEmpty(res.text))
                 {
+                    Debug.Log($"[STT] Parsed transcription: '{res.text}'");
                     _incomingTexts.Enqueue(res.text);
                     continue;
                 }
@@ -251,13 +258,17 @@ public class STTManager : MonoBehaviour
 
     private void AppendStreamedSegment(string segment)
     {
+        Debug.Log($"[STT] AppendStreamedSegment called with: '{segment}'");
         _buffer += segment;
         if (outputText != null) outputText.text = _buffer + "...";
     }
 
     private void HandleFinalResult(string text)
     {
+        Debug.Log($"[STT] HandleFinalResult called with: '{text}'");
+        Debug.Log($"[STT] onTranscribed event exists: {onTranscribed != null}");
         onTranscribed?.Invoke(text);
+        Debug.Log($"[STT] onTranscribed.Invoke() completed");
         if (outputText != null) outputText.text = text;
     }
 

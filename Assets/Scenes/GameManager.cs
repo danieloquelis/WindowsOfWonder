@@ -78,6 +78,10 @@ public class GameManager : MonoBehaviour
                             // Now it's user's turn to create a story (AI picked the object)
                             // Keep _isUserTurnToPick = false until user finishes their story
                             Debug.Log("Starting user recording for story creation...");
+                            
+                            // Show the stop recording button on the selected object
+                            _currentSelectedTagManager.ShowStopRecordingButton();
+                            
                             sttManager.OnStartRecording();
                         }
                         else
@@ -128,9 +132,15 @@ public class GameManager : MonoBehaviour
 
     private void OnUserStoryTranscription(string userStory)
     {
-        Debug.Log($"User story received: {userStory}");
+        Debug.Log($"[GameManager] OnUserStoryTranscription called with: '{userStory}'");
         // Stop recording if it's still active
         sttManager.ForceStopRecording();
+        
+        // Hide the stop recording button since recording is complete
+        if (_currentSelectedTagManager != null)
+        {
+            _currentSelectedTagManager.HideStopRecordingButton();
+        }
         
         // Get available objects (excluding already used ones)
         var availableObjects = new List<string>();

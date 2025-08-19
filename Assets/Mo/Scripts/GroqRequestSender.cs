@@ -9,7 +9,7 @@ using System.Linq;
 public class GroqRequestSender : MonoBehaviour
 {
     [SerializeField] private string apiUrl = "https://api.groq.com/openai/v1/chat/completions";
-    [SerializeField] private string apiKey = "your_groq_api_key_here";
+    [SerializeField] private GroqConfig groqConfig;
     [SerializeField] private string model = "llama3-70b-8192";
     [SerializeField] private string myObject = "bottle";
 
@@ -171,7 +171,7 @@ Respond ONLY with this JSON structure (no markdown formatting):
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
-            request.SetRequestHeader("Authorization", "Bearer " + apiKey);
+            request.SetRequestHeader("Authorization", "Bearer " + groqConfig.apiKey);
 
             yield return request.SendWebRequest();
 

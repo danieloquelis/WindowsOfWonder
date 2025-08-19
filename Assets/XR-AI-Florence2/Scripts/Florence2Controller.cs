@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
-using NaughtyAttributes;
 using UnityEngine;
 using UnityEngine.UI;
 using Newtonsoft.Json;
@@ -12,6 +11,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Meta.XR;
 using PassthroughCameraSamples;
+using UnityEngine.Events;
 
 namespace PresentFutures.XRAI.Florence
 {
@@ -181,13 +181,19 @@ namespace PresentFutures.XRAI.Florence
             { Florence2Task.OCR, "<OCR>" },
             { Florence2Task.OCRWithRegion, "<OCR_WITH_REGION>" }
         };
+
+        [Header("Events")]
+        public UnityEvent onInferenceRunning;
+        public UnityEvent<Entities> onInferenceCompleted;
+        public UnityEvent<string> onInferenceFailed;
         
-        [Button]
         public void SendRequest()
         {
             if (resultText != null) resultText.text = "";
             if (statusText != null) statusText.text = "Processing...";
+            Debug.Log("Enabling loading");
             if (loadingIcon != null) loadingIcon.SetActive(true);
+            onInferenceRunning?.Invoke();
             
             _detectionResults.Clear();
             _overlayTexture = null;
@@ -202,6 +208,7 @@ namespace PresentFutures.XRAI.Florence
             {
                 statusText.text = "Error: API Key or Source Image is missing!";
                 if (loadingIcon != null) loadingIcon.SetActive(false);
+                onInferenceFailed?.Invoke(statusText.text);
                 yield break;
             }
 
@@ -243,6 +250,7 @@ namespace PresentFutures.XRAI.Florence
                 Debug.LogError($"An error occurred during the web request: {sendTask.Exception}");
                 statusText.text = "Error: Request failed.";
                 if (loadingIcon != null) loadingIcon.SetActive(false);
+                onInferenceFailed?.Invoke(statusText.text);
             }
             else
             {
@@ -259,6 +267,7 @@ namespace PresentFutures.XRAI.Florence
                     // but the result is null as we defined in SendRequestWithHttpClientAsync.
                     statusText.text = "Error: Received an error response from the server.";
                     Debug.LogError("Request completed but returned null or empty data. Check console for specific HTTP error.");
+                    onInferenceFailed?.Invoke(statusText.text);
                 }
                 if (loadingIcon != null) loadingIcon.SetActive(false);
             }
@@ -346,15 +355,24 @@ namespace PresentFutures.XRAI.Florence
                             }
 
                             if (response.Choices != null && response.Choices.Count > 0 && response.Choices[0]?.Message?.Entities != null)
-                                DisplayObjectDetectionResults(response.Choices[0].Message.Entities);
+                            {
+                                var entities = response.Choices[0].Message.Entities;
+                                DisplayObjectDetectionResults(entities);
+                                onInferenceCompleted?.Invoke(entities);
+                            }
                             else
-                                Debug.LogWarning("The 'entities' object is missing from the JSON response. No bounding boxes to display.");
+                            {
+                                Debug.LogWarning(
+                                    "The 'entities' object is missing from the JSON response. No bounding boxes to display.");
+                                onInferenceCompleted?.Invoke(null);
+                            }
                         }
                     }
                     else if (entry.FullName.EndsWith(".png"))
                     {
                         // Optional: You could also handle the overlay.png here if you wanted.
                         Debug.Log("Found overlay.png, skipping for now.");
+                        onInferenceCompleted?.Invoke(null);
                     }
                 }
             }
@@ -364,6 +382,7 @@ namespace PresentFutures.XRAI.Florence
         {
             if (statusText != null) statusText.text = "Error: Failed to read response.";
             Debug.LogError($"Failed to process ZIP response: {e.Message}\n{e.StackTrace}");
+            onInferenceFailed?.Invoke(statusText.text);
         }
     }
 
@@ -518,6 +537,10 @@ namespace PresentFutures.XRAI.Florence
                     if (environmentRaycastManager.Raycast(ray, out EnvironmentRaycastHit hitInfo))
                     {
                         GameObject anchorGo = Instantiate(spatialAnchorPrefab);
+                        if (anchorGo.TryGetComponent<TagManager>(out var tagManager))
+                        {
+                            tagManager.SetObjectName(det.Label);
+                        }
                         anchorGo.transform.SetPositionAndRotation(
                             hitInfo.point,
                             Quaternion.LookRotation(hitInfo.normal, Vector3.up));

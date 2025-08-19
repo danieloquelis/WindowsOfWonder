@@ -95,6 +95,10 @@ android/*
 Assets/Resources/RunPodConfig.asset
 Assets/Resources/RunPodConfig.asset.meta
 
+# Groq Config
+Assets/Resources/GroqConfig.asset
+Assets/Resources/GroqConfig.asset.meta
+
 # AI Models
 *.pt
 *.pth

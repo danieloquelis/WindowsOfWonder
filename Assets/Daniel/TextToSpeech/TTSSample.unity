@@ -1245,6 +1245,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: TextToSpeech
       objectReference: {fileID: 0}
+    - target: {fileID: 8684635160617360986, guid: e9f1d90a0742d416d92cba4fb7452da8, type: 3}
+      propertyPath: testText
+      value: '**My story is more difficult than you think, this is not a story for
+        weak people. Nor for ones that want a quick thing.**'
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

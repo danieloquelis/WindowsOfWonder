@@ -25,6 +25,8 @@ public class ImageGen : MonoBehaviour
     
     public void GenerateImage(string prompt)
     {
+        Debug.Log($"[ImageGen] GenerateImage called with prompt: '{prompt}'");
+        Debug.Log($"[ImageGen] Starting GenerateImageAsync coroutine");
         StartCoroutine(GenerateImageAsync(prompt));
     }
     
@@ -35,8 +37,10 @@ public class ImageGen : MonoBehaviour
 
     private IEnumerator GenerateImageAsync(string prompt)
     {
+        Debug.Log($"[ImageGen] GenerateImageAsync started with prompt: '{prompt}'");
         var requestData = new FluxRequest(prompt, width, height);
         var jsonPayload = JsonUtility.ToJson(requestData);
+        Debug.Log($"[ImageGen] Created request JSON: {jsonPayload}");
 
         var postRequest = new UnityWebRequest("https://api.bfl.ai/v1/flux-pro-1.1", "POST");
         var bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonPayload);
@@ -98,6 +102,7 @@ public class ImageGen : MonoBehaviour
                     targetRawImage.enabled = true;
                 }
                 
+                Debug.Log($"[ImageGen] Image generation completed successfully, invoking onGenerationCompleted event");
                 onGenerationCompleted?.Invoke(tex);
                 ready = true;
             }

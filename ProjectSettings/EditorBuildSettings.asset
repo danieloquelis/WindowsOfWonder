@@ -5,12 +5,9 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 1
-    path: Assets/Elias/Scenes/PCAObjDetection.unity
-    guid: 58aa3e85c9e36424090d4834009adcac
+    path: Assets/Scenes/Main.unity
+    guid: 12a303e534294463db4236cf2b68e1e8
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
     com.unity.xr.arfoundation.simulation_settings: {fileID: 11400000, guid: 810d0665ad7ba254f8b2e1677b8f3479, type: 2}

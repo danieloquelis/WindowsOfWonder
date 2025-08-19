@@ -3,6 +3,12 @@ using System.Collections;
 using System.Text;
 using UnityEngine.Networking;
 using System;
+using Meta.XR.MRUtilityKit;
+using Mono.Cecil.Cil;
+using NUnit.Framework;
+using Unity.VisualScripting;
+using Unity.XR.CompositionLayers.UIInteraction;
+using UnityEngine.TextCore.Text;
 
 public class GroqRequestSender : MonoBehaviour
 {
@@ -87,10 +93,22 @@ Respond ONLY with this JSON structure (no markdown formatting):
     {
         string str1, str2, newprompt = null;
         
-        str1 =      "[INST]Write Chapter " + chapter + " of a 3-chapter creative story. " +
-                    "\nRules:\n- The story must be exactly 5 sentences long. " +
-                    "\n- Each chapter introduces a new object. Chapter " + chapter + " is about a " + myObject + 
-                    "\n- Output must be valid JSON with only these keys: " +
+        str1 = "[INST]You are a creative narrator guiding a 3-chapter improvisational story where everyday objects become fictional characters." +
+"\n\nStory Rules:" +
+"\n- The Chapters should be about 20–30 seconds when read aloud." +
+"\n- The story has 3 chapters:" +
+"\n   • Chapter 1: The first chosen object becomes the Hero, the main character of the adventure." +
+"\n   • Chapter 2: A new everyday object becomes the Sidekick, who secretly does most of the work." +
+"\n   • Chapter 3: A final everyday object becomes the Antagonist, the villain." +
+"\n- Each chapter should introduce and focus on its new character while continuing the narrative." +
+"\n- The story should end openly, leaving space for imagination." +
+"\n- Write it in a casual, simple language, so that it is easy to understand." +
+"\n\nChapter 1 Instructions:" +
+"\n- Write from the perspective of a playful, imaginative narrator." +
+"\n- Transform the object provided (" + myObject + ") into a larger-than-life Hero." +
+"\n- Introduces the Character with a unique abilitie, its biggest flaw, and personality." +
+"\n- Do not mention the sidekick yet!" +
+"\n- The tone should feel whimsical, adventurous, and slightly improvised." +
                     "\n  {\n    \"chapter\": 1,\n    \"title\": \"string\",\n    \"story\": \"5 full sentences of narrative prose\",\n    \"image_prompt\": \"string describing the scene for image generation\",\n    \"ambient_audio\": \"one choice from: Storm, Airport, supermarket, forest, river, Submarine, space\"\n  }\n[/INST]";
         
         str2 = @"Analyze the following story addition and identify appropriate audio and lighting effects to enhance the scene. Return your analysis in the specified JSON format.

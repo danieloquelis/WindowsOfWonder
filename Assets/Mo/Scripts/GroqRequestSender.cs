@@ -88,29 +88,38 @@ Respond ONLY with this JSON structure (no markdown formatting):
     public string GetPromptForUserEvaluation(string userStory, List<string> availableObjects = null)
     {
         return
-            $@"Analyse this story given by the user of this game: {userStory} => And return a json structure with the following information:
-            1. Small comment about the story highlighting the creativity and some elements on the story. Make sure to be concise having 10 seconds max. If the story is small or not creative, answer with a funny joke about it without being harsh.
-            2. A message saying it's now the user's turn to pick an object for the AI. Something like 'Now it's YOUR turn to pick an object for me to create a story about. Let's see what you choose...' Adjust the tone based on user's story quality - be afraid if it was good, sarcastic if it wasn't.
-            3. A prompt to generate an image based on the user story: {userStory}. Make sure it is optimised for flux image generation. Only 5 words maximum.
+            $@"You are an AI storytelling opponent in an epic battle of creativity! Analyze the user's story: ""{userStory}""
+
+Your mission:
+1. **COMMENT (15-20 seconds)**: Give a detailed, entertaining evaluation of their story. Be theatrical and engaging! Highlight creative elements, surprising twists, or amusing details. If the story lacks creativity, roast them playfully with humor - but keep it fun and encouraging. Make it feel like a friendly competition between storytelling rivals.
+
+2. **NEXT CHALLENGE**: After your evaluation, challenge them to pick the next object for YOU to create a story about. Adjust your tone: 
+   - If their story was amazing: Be worried/impressed (""Okay, I'm genuinely concerned... that was good! Now pick an object and let me show you what I can do!"")
+   - If their story was meh: Be confidently sarcastic (""Really? THAT'S your best shot? Pick an object and watch a master at work!"")
+
+3. **IMAGE PROMPT**: Create a vivid, detailed image generation prompt based on their story. Use 10-15 words to capture the essence, mood, and key visual elements of their narrative.
 
 Respond ONLY with this JSON structure (no markdown formatting):
 {{{{
-  ""comment"": ""comment_text"",
-  ""next_question"": ""next_question_text"",
-  ""image_prompt"": ""image_prompt""
+  ""comment"": ""your_detailed_entertaining_comment"",
+  ""next_question"": ""your_challenge_message"",
+  ""image_prompt"": ""detailed_image_generation_prompt""
 }}}}
 ";
     }
 
     public string GetPrompt(int chapter, string myObject, List<string> detectedObjects)
     {
-        return $@"Write Chapter {chapter} of a creative story about {myObject}. This is a storytelling game where AI and User take turns.
+        return $@"You are a master storyteller in an epic creative battle! Create an amazing story about {myObject} that will blow the human away.
 
-        Your tasks:
-        1. Create a creative story (5 sentences) about {myObject}
-        2. Generate an image prompt for the story
-        3. Pick the NEXT object from this list: {string.Join(", ", detectedObjects)} (must be different from {myObject})
-        4. Challenge the user to create a story about your picked object
+        Your mission:
+        1. **STORY**: Craft a captivating, imaginative story (4-6 sentences) about {myObject}. Be creative, surprising, and memorable! Think outside the box - make ordinary objects extraordinary.
+        
+        2. **IMAGE PROMPT**: Create a detailed, vivid image generation prompt (10-15 words) that captures the essence and mood of your story.
+        
+        3. **PICK NEXT OBJECT**: Choose the most interesting object from this list: {string.Join(", ", detectedObjects)} (must be different from {myObject}). Pick something that will challenge the human's creativity.
+        
+        4. **CHALLENGE**: Create an engaging challenge for the human. Be confident and playful - you're trying to intimidate them with your storytelling skills while encouraging them to try their best.
 
         Respond ONLY with this JSON structure (no markdown formatting):
         {{{{
@@ -129,7 +138,7 @@ Respond ONLY with this JSON structure (no markdown formatting):
             ""color_mood"": ""#FF6600""
           }}}},
           ""confidence"": ""high"",
-          ""next_question"": ""Now it is your turn, tell me a story about [YOUR_PICKED_OBJECT]. Let's see if you can beat me!"",
+          ""next_question"": ""your_engaging_challenge_message_with_picked_object"",
           ""selected_object_by_ai"": ""exact_object_name_from_list"",
           ""reasoning"": ""brief explanation""
         }}}}";

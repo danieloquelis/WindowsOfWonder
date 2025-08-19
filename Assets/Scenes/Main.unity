@@ -3240,6 +3240,10 @@ PrefabInstance:
       propertyPath: actionButton
       value: 256
       objectReference: {fileID: 0}
+    - target: {fileID: 5897185360467171943, guid: 2f4f62003c1e0484dab94bd792db716b, type: 3}
+      propertyPath: streamSegments
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7430971011769814560, guid: 2f4f62003c1e0484dab94bd792db716b, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

@@ -62,7 +62,9 @@ public class TTSManager : MonoBehaviour
 
     private IEnumerator SpeakRoutine(string text, Action onComplete)
     {
+        Debug.Log($"[TTS] SpeakRoutine called with text: '{text}'");
         var content = string.IsNullOrWhiteSpace(text) ? testText : text;
+        Debug.Log($"[TTS] Using content: '{content}' (fallback to testText: {string.IsNullOrWhiteSpace(text)})");
 
         // If something is playing, WAIT instead of silently returning.
         if (_audioSource.isPlaying)

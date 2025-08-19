@@ -95,7 +95,7 @@ Respond ONLY with this JSON structure (no markdown formatting):
 Respond ONLY with this JSON structure (no markdown formatting):
 {{{{
   ""comment"": ""chapter"",
-  ""image_prompt"": ""image_prompt""
+  ""image_prompt"": ""image_prompt"",
   ""next_question"": ""next_question""
 }}}}
 ";

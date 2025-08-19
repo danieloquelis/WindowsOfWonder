@@ -44,9 +44,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 653ac9384668b1a40a8916e159759577, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  apiKey: a85cdd5c-420b-4272-8cfc-656ddf97176b
-  targetRenderer: {fileID: 0}
-  prompt: A futuristic city skyline at sunset with flying cars
-  width: 1024
-  height: 1024
+  apiKey: ec3f5a9a-7f83-4d02-bce2-f2b2ab5b98b5
+  width: 640
+  height: 480
   pollInterval: 0.5
+  targetRawImage: {fileID: 0}
+  testPrompt: A futuristic city skyline at sunset with flying cars
+  onGenerating:
+    m_PersistentCalls:
+      m_Calls: []
+  onGenerationCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onGenerationFailed:
+    m_PersistentCalls:
+      m_Calls: []

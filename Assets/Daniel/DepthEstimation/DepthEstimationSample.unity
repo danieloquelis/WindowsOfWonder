@@ -901,6 +901,10 @@ PrefabInstance:
       value: DepthEstimation
       objectReference: {fileID: 0}
     - target: {fileID: 3170757569271164685, guid: 042bc9cb068ac432c81f171f44a5ad60, type: 3}
+      propertyPath: testImage
+      value: 
+      objectReference: {fileID: 2800000, guid: d30194e9e15384c14bbb56078a466b3c, type: 3}
+    - target: {fileID: 3170757569271164685, guid: 042bc9cb068ac432c81f171f44a5ad60, type: 3}
       propertyPath: testButton
       value: 
       objectReference: {fileID: 2142725388}

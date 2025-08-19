@@ -191,6 +191,14 @@ public class STTManager : MonoBehaviour
         else StopRecording();
     }
 
+    /// <summary>
+    /// Force stop recording if currently active.
+    /// </summary>
+    public void ForceStopRecording()
+    {
+        if (_isRecording) StopRecording();
+    }
+
     private void StartRecording()
     {
         if (microphoneStreamer == null)

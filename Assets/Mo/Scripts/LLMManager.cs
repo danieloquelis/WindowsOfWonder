@@ -40,9 +40,9 @@ public class LLMManager : MonoBehaviour
         StartCoroutine(RunLLMFlow(userInput));
     }
 
-    public void CallLLMForEvaluatingUser(string userStory)
+    public void CallLLMForEvaluatingUser(string userStory, List<string> availableObjects = null)
     {
-        var prompt = requestSender.GetPromptForUserEvaluation(userStory);
+        var prompt = requestSender.GetPromptForUserEvaluation(userStory, availableObjects);
         onInferenceRunning?.Invoke();
         StartCoroutine(RunLLMFlow(prompt));
     }

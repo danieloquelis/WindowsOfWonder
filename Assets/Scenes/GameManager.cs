@@ -47,8 +47,18 @@ public class GameManager : MonoBehaviour
             
             Debug.Log($"[GameManager] aiNextVoice: '{aiNextVoice}' (Story: '{llmResponse.GetStory()}', Comment: '{llmResponse.GetComment()}')");
             
-            imageGenerator.GenerateImage(imageGenPrompt);
-            Debug.Log(imageGenPrompt);
+            Debug.Log($"[GameManager] About to call imageGenerator.GenerateImage with prompt: '{imageGenPrompt}'");
+            Debug.Log($"[GameManager] imageGenerator is null: {imageGenerator == null}");
+            
+            if (!string.IsNullOrEmpty(imageGenPrompt))
+            {
+                imageGenerator.GenerateImage(imageGenPrompt);
+                Debug.Log($"[GameManager] Called imageGenerator.GenerateImage successfully");
+            }
+            else
+            {
+                Debug.LogError($"[GameManager] Image prompt is null or empty! Cannot generate image.");
+            }
             ttsManager.Speak(aiNextVoice, () =>
             {
                 // Handle the next step based on whose turn it is to pick objects
@@ -168,6 +178,8 @@ public class GameManager : MonoBehaviour
 
     private void OnImageGeneratedCompleted(Texture2D image)
     {
+        Debug.Log($"[GameManager] OnImageGeneratedCompleted called with image: {image != null}");
+        Debug.Log($"[GameManager] _currentSelectedTagManager is null: {_currentSelectedTagManager == null}");
         Debug.Log("Image generated, about to find depth");
         depthEstimationManager.ProcessImage(image);
     }
